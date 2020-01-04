@@ -3,7 +3,6 @@
 $ npm i
 $ npm start
 ```
-***
 
 ## 简介
 * 用TS基于Koa开发的一个简单server
