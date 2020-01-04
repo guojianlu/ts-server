@@ -26,17 +26,27 @@ const router = new KoaRouter()
 
 const decorate = (method: HTTPMethod, path: string, options: RouteOptions ={}, router: KoaRouter) => {
   return (target, property: string) => {
-    // 添加中间件数组
-    const middlewares = []
-    // 若设置了中间件选项则加入到中间件数组
-    if (options.middlewares) {
-      middlewares.push(...options.middlewares);
-    }
-    // 添加路由处理器
-    middlewares.push(target[property])
-    const url = options.prefix ? options.prefix + path : path
-    // router[method](url, target[property])
-    router[method](url, ...middlewares)
+    // 装饰器的正常执行顺序：先执行方法装饰器，后执行类装饰器
+    // 用process.nextTick的原因是：想让类装饰器先执行，方法装饰器后执行
+    process.nextTick(() => {
+      // 添加中间件数组
+      const middlewares = []
+
+      // 类装饰器传入的中间件
+      if (target.middlewares) {
+        middlewares.push(...target.middlewares)
+      }
+
+      // 若设置了中间件选项则加入到中间件数组
+      if (options.middlewares) {
+        middlewares.push(...options.middlewares);
+      }
+      // 添加路由处理器
+      middlewares.push(target[property])
+      const url = options.prefix ? options.prefix + path : path
+      // router[method](url, target[property])
+      router[method](url, ...middlewares)
+    })
   }
 }
 
